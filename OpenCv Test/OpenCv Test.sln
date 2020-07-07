@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCv Test", "OpenCv Test\OpenCv Test.vcxproj", "{1883934D-FD59-439D-BB6F-C75743A6FF62}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCV Marker Test", "OpenCV Marker Test\OpenCV Marker Test.vcxproj", "{313E81B1-1F56-4C7C-A9E7-74C11B403E65}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCV CreateBoardCharuco", "OpenCV CreateBoardCharuco\OpenCV CreateBoardCharuco.vcxproj", "{6785882E-C72F-4D49-B48A-0A7057B7854B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCV CalibrateCameraCharuco", "OpenCV CalibrateCameraCharuco\OpenCV CalibrateCameraCharuco.vcxproj", "{042EEAF9-494A-40AA-9011-CB7B9617FFF8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Debug|x64.ActiveCfg = Debug|x64
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Debug|x64.Build.0 = Debug|x64
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Debug|x86.ActiveCfg = Debug|Win32
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Debug|x86.Build.0 = Debug|Win32
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Release|x64.ActiveCfg = Release|x64
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Release|x64.Build.0 = Release|x64
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Release|x86.ActiveCfg = Release|Win32
+		{1883934D-FD59-439D-BB6F-C75743A6FF62}.Release|x86.Build.0 = Release|Win32
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Debug|x64.ActiveCfg = Debug|x64
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Debug|x64.Build.0 = Debug|x64
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Debug|x86.ActiveCfg = Debug|Win32
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Debug|x86.Build.0 = Debug|Win32
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Release|x64.ActiveCfg = Release|x64
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Release|x64.Build.0 = Release|x64
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Release|x86.ActiveCfg = Release|Win32
+		{313E81B1-1F56-4C7C-A9E7-74C11B403E65}.Release|x86.Build.0 = Release|Win32
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Debug|x64.ActiveCfg = Debug|x64
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Debug|x64.Build.0 = Debug|x64
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Debug|x86.ActiveCfg = Debug|Win32
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Debug|x86.Build.0 = Debug|Win32
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Release|x64.ActiveCfg = Release|x64
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Release|x64.Build.0 = Release|x64
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Release|x86.ActiveCfg = Release|Win32
+		{6785882E-C72F-4D49-B48A-0A7057B7854B}.Release|x86.Build.0 = Release|Win32
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Debug|x64.ActiveCfg = Debug|x64
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Debug|x64.Build.0 = Debug|x64
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Debug|x86.ActiveCfg = Debug|Win32
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Debug|x86.Build.0 = Debug|Win32
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Release|x64.ActiveCfg = Release|x64
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Release|x64.Build.0 = Release|x64
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Release|x86.ActiveCfg = Release|Win32
+		{042EEAF9-494A-40AA-9011-CB7B9617FFF8}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4D7B483-9FE5-4068-94AA-CD8689FB8C52}
+	EndGlobalSection
+EndGlobal
