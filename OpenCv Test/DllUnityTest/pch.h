@@ -10,4 +10,22 @@
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
 
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <vector>
+#include <ctime>
+
+#include <opencv2/core.hpp>
+#include <opencv2/core/hal/hal.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/calib3d.hpp>
+#include "opencv2/calib3d/calib3d.hpp"
+#include <opencv2/aruco/charuco.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/aruco.hpp>
+#include <opencv_contrib-4.3.0/modules/aruco/src/predefined_dictionaries.hpp>
 #endif //PCH_H
