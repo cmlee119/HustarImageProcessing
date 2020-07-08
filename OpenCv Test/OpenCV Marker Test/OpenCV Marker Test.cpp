@@ -124,7 +124,7 @@ void loop()
 
     //imshow("input_image", input_image);
 
-
+    
 
     //contours를 찾는다.
     Mat contour_image = binary_image.clone();
