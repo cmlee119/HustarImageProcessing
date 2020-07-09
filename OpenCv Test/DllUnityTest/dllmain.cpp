@@ -10,11 +10,22 @@ const int ESC = 27;
 
 extern "C"
 {
+    struct MarkerTransform {
+        float x;
+        float y;
+        float z;
+        float pitch;
+        float yaw;
+        float roll;
+    };
+
     Mat dictionary = Mat(250, (6 * 6 + 7) / 8, CV_8UC4, (uchar*)DICT_6X6_1000_BYTES);
 
-    std::mutex mFrameBuffer;
-    Mat frameBuffer;
-    bool bIsFirst = true;
+    std::mutex m_mFrameBuffer;
+    Mat m_frameBuffer;
+
+    bool bFirst = true;
+    std::vector<MarkerTransform> m_vecMarkerTransform;
 
     Mat getByteListFromBits(const Mat& bits) {
         // integer ceil
@@ -96,9 +107,9 @@ extern "C"
         pInputVideo->read(input_image);
 
         //imshow("input_image", input_image);
-        
+
         waitKey(100);
-        
+
 
         //Mat input_image = imread("C:/Users/cmlee/source/repos/OpenCv Test/test.jpg", IMREAD_COLOR);
 
@@ -324,7 +335,7 @@ extern "C"
 
 
 
-        
+
 
 
         Mat camMatrix, distCoeffs;
@@ -335,7 +346,7 @@ extern "C"
         fs["distortion_coefficients"] >> distCoeffs;
 
 
-        
+
 
         vector<cv::Point3f> markerCorners3d;
         markerCorners3d.push_back(cv::Point3f(-0.5f, 0.5f, 0));
@@ -343,7 +354,7 @@ extern "C"
         markerCorners3d.push_back(cv::Point3f(0.5f, -0.5f, 0));
         markerCorners3d.push_back(cv::Point3f(-0.5f, -0.5f, 0));
 
-
+        vector<MarkerTransform> vecMarkerTransform;
         for (int i = 0; i < final_detectedMarkers.size(); i++)
         {
             vector<Point2f> m = final_detectedMarkers[i];
@@ -358,17 +369,26 @@ extern "C"
 
             //aruco 모듈에서 제공하는 함수를 이용하여 마커위에 좌표축을 그림
             aruco::drawAxis(input_image, camMatrix, distCoeffs, rotation_vector, translation_vector, 1.0);
+
+            MarkerTransform markerTransform;
+            markerTransform.x = translation_vector.data[0, 0];
+            markerTransform.y = translation_vector.data[0, 1];
+            markerTransform.z = translation_vector.data[0, 2];
+            markerTransform.pitch = rotation_vector.data[0, 0];
+            markerTransform.yaw = rotation_vector.data[0, 1];
+            markerTransform.roll = rotation_vector.data[0, 2];
+
+            vecMarkerTransform.push_back(markerTransform);
         }
 
-        
+
         //imshow("input_image", input_image);
-
-        mFrameBuffer.lock();
-        frameBuffer = input_image.clone();
-        mFrameBuffer.unlock();
-        //waitKey(0);
-
-        bIsFirst = false;
+        
+        m_mFrameBuffer.lock();
+        m_vecMarkerTransform = vecMarkerTransform;
+        cv::flip(input_image, m_frameBuffer, 0);
+        bFirst = false;
+        m_mFrameBuffer.unlock();
     }
 
     __declspec(dllexport) void StartLoop()
@@ -380,20 +400,32 @@ extern "C"
         }
     }
 
-    __declspec(dllexport) void GetRawImageBytes(unsigned char* data, int width, int height)
+    __declspec(dllexport) void GetRawImageBytes(unsigned char* data, int width, int height, MarkerTransform** vecMarkerTransform, int* itemCount)
     {
-        if (bIsFirst == true)
+        while (bFirst)
         {
-            waitKey(2000);
+            waitKey(100);
         }
         //VideoCapture inputVideo = VideoCapture("C:/Users/cmlee/source/repos/OpenCv Test/test.mp4");
 
         //Mat input_image;
         //inputVideo.read(input_image);
         //
-        mFrameBuffer.lock();
-        Mat input_image = frameBuffer.clone();
-        mFrameBuffer.unlock();
+        m_mFrameBuffer.lock();
+        *itemCount = m_vecMarkerTransform.size();
+        *vecMarkerTransform = new MarkerTransform[m_vecMarkerTransform.size()];
+        for (size_t i = 0; i < m_vecMarkerTransform.size(); i++)
+        {
+            (*vecMarkerTransform)[i].x = m_vecMarkerTransform[i].x;
+            (*vecMarkerTransform)[i].y = m_vecMarkerTransform[i].y;
+            (*vecMarkerTransform)[i].z = m_vecMarkerTransform[i].z;
+        }
+        Mat input_image = m_frameBuffer.clone();
+        m_mFrameBuffer.unlock();
+
+        
+        //size = vecMarkerTransform.size();
+
 
         //Resize Mat to match the array passed to it from C#
         cv::Mat resizedMat(height, width, input_image.type());

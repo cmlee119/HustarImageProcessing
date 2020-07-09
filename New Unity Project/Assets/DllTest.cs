@@ -5,12 +5,23 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+struct MarkerTransform
+{
+    public float x;
+    public float y;
+    public float z;
+    public float pitch;
+    public float yaw;
+    public float roll;
+};
+
 public class DllTest : MonoBehaviour
 { 
-    [DllImport("DllUnityTest", EntryPoint = "StartLoop")]
+    [DllImport("DllUnityTest 11", EntryPoint = "StartLoop")]
     private static extern void StartLoop();
-    [DllImport("DllUnityTest", EntryPoint = "GetRawImageBytes")]
-    private static extern void GetRawImageBytes(IntPtr data, int width, int height/*, IntPtr dataMarker*/);
+    [DllImport("DllUnityTest 11", EntryPoint = "GetRawImageBytes")]
+    private static extern void GetRawImageBytes(IntPtr data, int width, int height, out IntPtr pVecMarkerTransform, out int itemCount);
 
     private CanvasRenderer canvasRenderer;
 
@@ -20,7 +31,9 @@ public class DllTest : MonoBehaviour
     private GCHandle pixelHandle;
     private IntPtr pixelPtr;
 
-    //private IntPtr markerPtr;
+    private IntPtr markerPtr;
+
+    public GameObject objPlanet;
 
     void Start()
     {
@@ -50,18 +63,41 @@ public class DllTest : MonoBehaviour
 
     void MatToTexture2D()
     {
-        //int iCountMarker;
+        IntPtr pMarkerTransform = IntPtr.Zero;
+        int itemCount = 0;
+
 
         //Convert Mat to Texture2D
-        GetRawImageBytes(pixelPtr, tex.width, tex.height/*, markerPtr*/);
+        GetRawImageBytes(pixelPtr, tex.width, tex.height, out pMarkerTransform, out itemCount);
+
+
+        List<MarkerTransform> informationList = new List<MarkerTransform>();
+        int structSize = Marshal.SizeOf(typeof(MarkerTransform));
+
+        GameObject[] objList = GameObject.FindGameObjectsWithTag("Planets");
+        foreach (GameObject obj in objList)
+        {
+            GameObject.Destroy(obj);
+        }
+
+        Debug.Log(itemCount);
+        for (int i = 0; i < itemCount; i++)
+        {
+            MarkerTransform info = (MarkerTransform)Marshal.PtrToStructure(pMarkerTransform, typeof(MarkerTransform));
+            //informationList.Add(info);
+            pMarkerTransform = new IntPtr(pMarkerTransform.ToInt64() + structSize);
+
+            Instantiate(objPlanet, new Vector3(info.x, info.y, info.z), Quaternion.identity);
+        }
+
         //Update the Texture2D with array updated in C++
         tex.SetPixels32(pixel32);
         tex.Apply();
 
-        
+
 
         RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
-        Vector2 vec2;
+        UnityEngine.Vector2 vec2;
         vec2.x = Screen.width;
         vec2.y = Screen.height;
         rectTransform.sizeDelta = vec2;
