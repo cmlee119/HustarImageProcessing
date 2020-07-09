@@ -5,10 +5,6 @@
 using namespace std;
 using namespace cv;
 
-const int ESC = 27;
-
-
-
 struct MarkerTransform {
     int marker_id;
     float x;
@@ -97,8 +93,9 @@ int m_marker_image_side_length = 80; //마커 6x6크기일때 검은색 테두�
 
 vector<cv::Point3f> m_markerCorners3d;
 
+bool m_bCamMode = true;
 
-extern "C" __declspec(dllexport) bool DllMainInit()
+extern "C" __declspec(dllexport) bool DllMainInit(IN bool CamMode, IN char* strVideoPath)
 {
     bClose = false;
     bFirst = true;
@@ -117,8 +114,23 @@ extern "C" __declspec(dllexport) bool DllMainInit()
         pInputVideo = new VideoCapture();
     }
 
-    if (false == pInputVideo->open(0))
-        return false;
+    m_bCamMode = CamMode;
+    if (true == m_bCamMode)
+    {
+        if (false == pInputVideo->open(0))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (false == pInputVideo->open(strVideoPath))
+        {
+            return false;
+        }
+    }
+    
+
 
                                 //이후 단계에서 이미지를 격자로 분할할 시 셀하나의 픽셀너비를 10으로 한다면
                                 //마커 이미지의 한변 길이는 80
@@ -151,9 +163,7 @@ void Dispose()
 void loop()
 {
     Mat input_image;
-    *pInputVideo >> input_image;
-    pInputVideo->retrieve(input_image);
-    //waitKey(50);
+
     if (nullptr == pInputVideo)
     {
         return;
@@ -164,12 +174,20 @@ void loop()
         return;
     }
 
+    if (m_bCamMode == true)
+    {
+        if (false == pInputVideo->retrieve(input_image))
+            return;
+    }
+    else
+    {
+        if (false == pInputVideo->read(input_image))
+            return;
+    }
 
-    //if (false == pInputVideo->open(0))
-    //{
-    //    return;
-    //}
+    
 
+    
 
     Mat input_gray_image;
     cvtColor(input_image, input_gray_image, cv::COLOR_BGR2GRAY);
@@ -179,9 +197,8 @@ void loop()
     //threshold(input_gray_image, binary_image, 125, 255, THRESH_BINARY_INV | THRESH_OTSU);
 
     //contours를 찾는다.
-    Mat contour_image = binary_image.clone();
     vector<vector<Point> > contours;
-    findContours(contour_image, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
+    findContours(binary_image, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
 
     //contour를 근사화한다.
     vector<vector<Point2f> > marker;
@@ -409,10 +426,7 @@ extern "C" __declspec(dllexport) bool DllMainGetRawImageBytes(IN OUT unsigned ch
     m_mFrameBuffer.lock();
     *itemCount = static_cast<int>(m_vecMarkerTransform.size());
     *vecMarkerTransform = new MarkerTransform[m_vecMarkerTransform.size()];
-    for (size_t i = 0; i < m_vecMarkerTransform.size(); i++)
-    {
-        std::memcpy(*vecMarkerTransform, &m_vecMarkerTransform[0], sizeof(MarkerTransform)* m_vecMarkerTransform.size());
-    }
+    std::memcpy(*vecMarkerTransform, &m_vecMarkerTransform[0], sizeof(MarkerTransform) * m_vecMarkerTransform.size());
     const Mat input_image = m_frameBuffer.clone();
     m_mFrameBuffer.unlock();
     //크리티컬 섹션(임계 영역) 끝

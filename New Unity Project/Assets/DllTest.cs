@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Linq;
+using System.Text;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 struct MarkerTransform
@@ -19,7 +20,7 @@ public class DllTest : MonoBehaviour
     private const string m_strDllName = "DllUnityTest";
 
     [DllImport(m_strDllName, EntryPoint = "DllMainInit")]
-    private static extern bool DllMainInit();
+    private static extern bool DllMainInit(bool bCamMode, StringBuilder strVideoFilePath);
 
 
     [DllImport(m_strDllName, EntryPoint = "DllMainStartLoop")]
@@ -54,18 +55,23 @@ public class DllTest : MonoBehaviour
     private int m_iVideoFrameWidth;
     private int m_iVideoFrameHeight;
 
+    public bool m_bCamMode = true;
+    public string m_strVideoFilePath = "";
+
     void Start()
     {
+        StringBuilder strBuilder = new StringBuilder(m_strVideoFilePath);
+
         //Marker Detector를 준비합니다.
-        if(false == DllMainInit())
+        if(false == DllMainInit(m_bCamMode, strBuilder))
         {
-            Debug.LogError("DllMainInit");
+            Debug.LogError("DllMainInit 실패");
         }
 
         //비디오 프레임의 크기를 알아옵니다.
         if(false == DllMainGetFrameSize(out m_iVideoFrameWidth, out m_iVideoFrameHeight))
         {
-            Debug.LogError("DllMainGetFrameSize");
+            Debug.LogError("DllMainGetFrameSize 실패");
         }
 
         InitTexture();

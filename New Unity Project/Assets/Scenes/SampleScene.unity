@@ -331,6 +331,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objPlanet: {fileID: 6183859532376144625, guid: fbd19b97be3e6d74288d142eeab0c109,
     type: 3}
+  m_bCamMode: 1
+  m_strVideoFilePath: D:\Hustar\HustarImageProcessingProject\trunk\OpenCv Test\test.mp4
 --- !u!114 &843981183
 MonoBehaviour:
   m_ObjectHideFlags: 0
