@@ -89,9 +89,18 @@ extern "C"
         //idx가 디폴트값 -1이 아니면 발견된 것
         return idx != -1;
     }
+    Mat camMatrix, distCoeffs;
     VideoCapture* pInputVideo;
     void init()
     {
+
+
+        FileStorage fs("C:/Users/cmlee/source/repos/OpenCv Test/OpenCV CalibrateCameraCharuco/output.txt", FileStorage::READ);
+        if (!fs.isOpened())
+            return;
+        fs["camera_matrix"] >> camMatrix;
+        fs["distortion_coefficients"] >> distCoeffs;
+
         if (pInputVideo == nullptr)
         {
             pInputVideo = new VideoCapture();
@@ -102,45 +111,23 @@ extern "C"
 
     void loop()
     {
-        //이미지 파일을 불러온다.  
         Mat input_image;
         pInputVideo->read(input_image);
 
-        //imshow("input_image", input_image);
-
         waitKey(100);
 
-
-        //Mat input_image = imread("C:/Users/cmlee/source/repos/OpenCv Test/test.jpg", IMREAD_COLOR);
-
-        //그레이스케일 이미지로 변환한다.
         Mat input_gray_image;
         cvtColor(input_image, input_gray_image, cv::COLOR_BGR2GRAY);
 
-        //Adaptive Thresholding을 적용하여 이진화 한다. 
         Mat binary_image;
         adaptiveThreshold(input_gray_image, binary_image,
             255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 91, 7);
         //threshold(input_gray_image, binary_image, 125, 255, THRESH_BINARY_INV | THRESH_OTSU);
 
-
-
-        //imshow("input_image", input_image);
-
-
-
         //contours를 찾는다.
         Mat contour_image = binary_image.clone();
         vector<vector<Point> > contours;
         findContours(contour_image, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
-
-
-
-
-        //imshow("contour_image", contour_image);
-
-
-
 
         //contour를 근사화한다.
         vector<vector<Point2f> > marker;
@@ -157,7 +144,6 @@ extern "C"
                 isContourConvex(Mat(approx)) //convex인지 검사한다.
                 )
             {
-
                 //drawContours(input_image, contours, i, Scalar(0, 255, 0), 1, LINE_AA);
 
                 vector<cv::Point2f> points;
@@ -171,22 +157,13 @@ extern "C"
                 double o = (v1.x * v2.y) - (v1.y * v2.x);
                 if (o < 0.0)
                     swap(points[1], points[3]);
-
                 marker.push_back(points);
-
             }
         }
-
-
-
-
-
-
 
         vector<vector<Point2f> > detectedMarkers;
         vector<Mat> detectedMarkersImage;
         vector<Point2f> square_points;
-
         int marker_image_side_length = 80; //마커 6x6크기일때 검은색 테두리 영역 포함한 크기는 8x8
                                     //이후 단계에서 이미지를 격자로 분할할 시 셀하나의 픽셀너비를 10으로 한다면
                                     //마커 이미지의 한변 길이는 80
@@ -195,15 +172,11 @@ extern "C"
         square_points.push_back(cv::Point2f(marker_image_side_length - 1, marker_image_side_length - 1));
         square_points.push_back(cv::Point2f(0, marker_image_side_length - 1));
 
+
         Mat marker_image;
         for (int i = 0; i < marker.size(); i++)
         {
             vector<Point2f> m = marker[i];
-
-            //Mat input_gray_image2 = input_gray_image.clone();
-            //Mat markerSubImage = input_gray_image2(cv::boundingRect(m));
-
-
             //마커를 사각형형태로 바꿀 perspective transformation matrix를 구한다.
             Mat PerspectiveTransformMatrix = getPerspectiveTransform(m, square_points);
 
@@ -212,8 +185,6 @@ extern "C"
 
             //otsu 방법으로 이진화를 적용한다. 
             threshold(marker_image, marker_image, 125, 255, THRESH_BINARY | THRESH_OTSU);
-
-
 
             //마커의 크기는 6, 검은색 태두리를 포함한 크기는 8
             //마커 이미지 테두리만 검사하여 전부 검은색인지 확인한다. 
@@ -236,7 +207,6 @@ extern "C"
 
                     if (total_cell_count > (cellSize * cellSize) / 2)
                         white_cell_count++; //태두리에 흰색영역이 있다면, 셀내의 픽셀이 절반이상 흰색이면 흰색영역으로 본다 
-
                 }
             }
 
@@ -247,20 +217,6 @@ extern "C"
                 detectedMarkersImage.push_back(img);
             }
         }
-
-
-        /*for (int i = 0; i < detectedMarkersImage.size(); ++i)
-        {
-            imshow("detectedMarkersImage" + i, detectedMarkersImage[i]);
-        }*/
-
-
-
-
-
-
-
-
 
         vector<Mat> bitMatrixs;
         for (int i = 0; i < detectedMarkers.size(); i++)
@@ -281,20 +237,12 @@ extern "C"
 
                     int total_cell_count = countNonZero(cell);
 
-
                     if (total_cell_count > (cellSize * cellSize) / 2)
                         bitMatrix.at<uchar>(y, x) = 1;
                 }
             }
-
             bitMatrixs.push_back(bitMatrix);
-
         }
-
-
-
-
-
 
         vector<int> markerID;
         vector<vector<Point2f> > final_detectedMarkers;
@@ -302,7 +250,6 @@ extern "C"
         {
             Mat bitMatrix = bitMatrixs[i];
             vector<Point2f> m = detectedMarkers[i];
-
 
             int rotation;
             int marker_id;
@@ -333,17 +280,6 @@ extern "C"
             }
         }
 
-
-
-
-
-
-        Mat camMatrix, distCoeffs;
-        FileStorage fs("C:/Users/cmlee/source/repos/OpenCv Test/OpenCV CalibrateCameraCharuco/output.txt", FileStorage::READ);
-        if (!fs.isOpened())
-            return;
-        fs["camera_matrix"] >> camMatrix;
-        fs["distortion_coefficients"] >> distCoeffs;
 
 
 
@@ -400,7 +336,7 @@ extern "C"
         }
     }
 
-    __declspec(dllexport) void GetRawImageBytes(unsigned char* data, int width, int height, MarkerTransform** vecMarkerTransform, int* itemCount)
+    __declspec(dllexport) void GetRawImageBytes( int width, int height, MarkerTransform** vecMarkerTransform, int* itemCount)
     {
         while (bFirst)
         {
@@ -441,7 +377,7 @@ extern "C"
         cv::split(argb_img, bgra);
         std::swap(bgra[0], bgra[3]);
         std::swap(bgra[1], bgra[2]);
-        std::memcpy(data, argb_img.data, argb_img.total() * argb_img.elemSize());
+        //std::memcpy(data, argb_img.data, argb_img.total() * argb_img.elemSize());
     }
 }
 
