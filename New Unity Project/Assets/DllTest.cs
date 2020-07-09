@@ -4,23 +4,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Linq;
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 struct MarkerTransform
 {
+    public int marker_id;
     public float x;
     public float y;
-    public float z;
-    public float pitch;
-    public float yaw;
-    public float roll;
-};
+}; 
 
 public class DllTest : MonoBehaviour
-{ 
-    [DllImport("DllUnityTest 11", EntryPoint = "StartLoop")]
+{
+    [DllImport("DllUnityTest 2", EntryPoint = "Init")]
+    private static extern void MarkerDetectorInit();
+    [DllImport("DllUnityTest 2", EntryPoint = "StartLoop")]
     private static extern void StartLoop();
-    [DllImport("DllUnityTest 11", EntryPoint = "GetRawImageBytes")]
+    [DllImport("DllUnityTest 2", EntryPoint = "CloseLoop")]
+    private static extern void CloseLoop();
+    [DllImport("DllUnityTest 2", EntryPoint = "GetRawImageBytes")]
     private static extern void GetRawImageBytes(IntPtr data, int width, int height, out IntPtr pVecMarkerTransform, out int itemCount);
 
     private CanvasRenderer canvasRenderer;
@@ -31,16 +33,20 @@ public class DllTest : MonoBehaviour
     private GCHandle pixelHandle;
     private IntPtr pixelPtr;
 
-    private IntPtr markerPtr;
-
     public GameObject objPlanet;
+
+    private Thread threadMarkerDetector;
 
     void Start()
     {
+        Debug.Log("Start");
+
         InitTexture();
         canvasRenderer = gameObject.GetComponent<CanvasRenderer>();
-         
-        Thread threadMarkerDetector = new Thread(new ThreadStart(StartLoop));
+
+        MarkerDetectorInit();
+
+        threadMarkerDetector = new Thread(new ThreadStart(StartLoop));
         threadMarkerDetector.Start();
     }
 
@@ -50,10 +56,27 @@ public class DllTest : MonoBehaviour
         MatToTexture2D(); 
     }
 
+    void OnDestroy()
+    {
+        CloseLoop();
+        
+    }
+
+    void OnApplicationQuit()
+    {
+        Debug.Log("OnApplicationQuit");
+        if (threadMarkerDetector != null && threadMarkerDetector.IsAlive)
+        {
+            //threadMarkerDetector.Join();
+            threadMarkerDetector = null;
+        }
+        //threadMarkerDetector.Interrupt();
+        //threadMarkerDetector.Abort();
+    }
 
     void InitTexture()
     {
-        tex = new Texture2D(1024, 1024, TextureFormat.ARGB32, false);
+        tex = new Texture2D(512, 512, TextureFormat.ARGB32, false);
         pixel32 = tex.GetPixels32();
         //Pin pixel32 array
         pixelHandle = GCHandle.Alloc(pixel32, GCHandleType.Pinned);
@@ -70,24 +93,39 @@ public class DllTest : MonoBehaviour
         //Convert Mat to Texture2D
         GetRawImageBytes(pixelPtr, tex.width, tex.height, out pMarkerTransform, out itemCount);
 
-
-        List<MarkerTransform> informationList = new List<MarkerTransform>();
         int structSize = Marshal.SizeOf(typeof(MarkerTransform));
 
-        GameObject[] objList = GameObject.FindGameObjectsWithTag("Planets");
-        foreach (GameObject obj in objList)
-        {
-            GameObject.Destroy(obj);
-        }
+        List<GameObject> listObject = GameObject.FindGameObjectsWithTag("Planets").ToList<GameObject>();
 
-        Debug.Log(itemCount);
+        //Debug.Log(itemCount);
         for (int i = 0; i < itemCount; i++)
         {
             MarkerTransform info = (MarkerTransform)Marshal.PtrToStructure(pMarkerTransform, typeof(MarkerTransform));
-            //informationList.Add(info);
-            pMarkerTransform = new IntPtr(pMarkerTransform.ToInt64() + structSize);
 
-            Instantiate(objPlanet, new Vector3(info.x, info.y, info.z), Quaternion.identity);
+            string strName = "" + info.marker_id;
+            Vector3 position = new Vector3(info.x / (Screen.width/8) - 2, -info.y / (Screen.height/4) + 2, 0);
+            Debug.Log("x : " + position.x + ",  y : " + position.y);
+            GameObject objGame = GameObject.Find(strName);
+            
+            if (objGame == null)
+            {
+                Debug.Log(strName);
+                objGame = Instantiate(objPlanet, position, Quaternion.identity);
+                objGame.name = strName;
+            }
+            else
+            {
+                objGame.GetComponent<Transform>().position = position;
+                objGame.GetComponent<Renderer>().enabled = true;
+                listObject.Remove(objGame);
+            }
+
+            pMarkerTransform = new IntPtr(pMarkerTransform.ToInt64() + structSize);
+        }
+
+        foreach(GameObject obj in listObject)
+        {
+            obj.GetComponent<Renderer>().enabled = false;
         }
 
         //Update the Texture2D with array updated in C++
@@ -103,11 +141,5 @@ public class DllTest : MonoBehaviour
         rectTransform.sizeDelta = vec2;
 
         canvasRenderer.SetTexture(tex);
-    }
-
-    void OnApplicationQuit()
-    {
-        //Free handle
-        pixelHandle.Free();
     }
 }
