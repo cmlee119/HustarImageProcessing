@@ -30,7 +30,7 @@ public class DllTest : MonoBehaviour
     private static extern void DllMainCloseLoop();
     
 
-    [DllImport(m_strDllName, EntryPoint = "DllMainGetRawImageBytes")]
+    [DllImport(m_strDllName, EntryPoint = "DllMainGetRawImageBytes")] 
     private static extern void DllMainGetRawImageBytes(IntPtr data, out IntPtr pVecMarkerTransform, out int itemCount);
     
     

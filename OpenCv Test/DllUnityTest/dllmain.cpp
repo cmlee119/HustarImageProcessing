@@ -2,7 +2,6 @@
 //#include "dllmain.h"
 #include <iostream>
 #include <opencv2/opencv.hpp>
-
 using namespace std;
 using namespace cv;
 
@@ -94,6 +93,7 @@ VideoCapture* pInputVideo = nullptr;
 
 vector<Point2f> m_square_points;
 int m_marker_image_side_length = 80; //마커 6x6크기일때 검은색 테두리 영역 포함한 크기는 8x8
+    
 
 vector<cv::Point3f> m_markerCorners3d;
 
@@ -103,7 +103,7 @@ extern "C" __declspec(dllexport) bool DllMainInit()
     bClose = false;
     bFirst = true;
 
-    FileStorage fs("C:/Users/cmlee/source/repos/OpenCv Test/OpenCV CalibrateCameraCharuco/output.txt", FileStorage::READ);
+    FileStorage fs("C:/Users/asper/source/repos/영상처리 및 OpenCV/offline/Marker Detect Mgr/Marker/output.txt", FileStorage::READ);
     if (!fs.isOpened())
         return false;
 
@@ -116,7 +116,7 @@ extern "C" __declspec(dllexport) bool DllMainInit()
         pInputVideo = new VideoCapture();
     }
 
-    if (false == pInputVideo->open("C:/Users/cmlee/source/repos/OpenCv Test/test.mp4"))
+    if (false == pInputVideo->open(0))
         return false;
 
                                 //이후 단계에서 이미지를 격자로 분할할 시 셀하나의 픽셀너비를 10으로 한다면
@@ -149,6 +149,10 @@ void Dispose()
 
 void loop()
 {
+    Mat input_image;
+    *pInputVideo >> input_image;
+    pInputVideo->retrieve(input_image);
+    //waitKey(50);
     if (nullptr == pInputVideo)
     {
         return;
@@ -159,13 +163,12 @@ void loop()
         return;
     }
 
-    Mat input_image;
-    if (false == pInputVideo->read(input_image))
-    {
-        return;
-    }
 
-    waitKey(50);
+    //if (false == pInputVideo->open(0))
+    //{
+    //    return;
+    //}
+
 
     Mat input_gray_image;
     cvtColor(input_image, input_gray_image, cv::COLOR_BGR2GRAY);
