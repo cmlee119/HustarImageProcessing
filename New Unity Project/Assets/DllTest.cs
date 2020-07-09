@@ -16,14 +16,27 @@ struct MarkerTransform
 
 public class DllTest : MonoBehaviour
 {
-    [DllImport("DllUnityTest", EntryPoint = "Init")]
-    private static extern void MarkerDetectorInit();
-    [DllImport("DllUnityTest", EntryPoint = "StartLoop")]
-    private static extern void StartLoop();
-    [DllImport("DllUnityTest", EntryPoint = "CloseLoop")]
-    private static extern void CloseLoop();
-    [DllImport("DllUnityTest", EntryPoint = "GetRawImageBytes")]
-    private static extern void GetRawImageBytes(IntPtr data, int width, int height, out IntPtr pVecMarkerTransform, out int itemCount);
+    private const string m_strDllName = "DllUnityTest";
+
+    [DllImport(m_strDllName, EntryPoint = "DllMainInit")]
+    private static extern bool DllMainInit();
+
+
+    [DllImport(m_strDllName, EntryPoint = "DllMainStartLoop")]
+    private static extern void DllMainStartLoop();
+
+
+    [DllImport(m_strDllName, EntryPoint = "DllMainCloseLoop")]
+    private static extern void DllMainCloseLoop();
+    
+
+    [DllImport(m_strDllName, EntryPoint = "DllMainGetRawImageBytes")]
+    private static extern void DllMainGetRawImageBytes(IntPtr data, out IntPtr pVecMarkerTransform, out int itemCount);
+    
+    
+    [DllImport(m_strDllName, EntryPoint = "DllMainGetFrameSize")]
+    private static extern bool DllMainGetFrameSize(out int iWidth, out int iHeight);
+
 
     private CanvasRenderer canvasRenderer;
 
@@ -37,16 +50,28 @@ public class DllTest : MonoBehaviour
 
     private Thread threadMarkerDetector;
 
+    //비디오, 캠의 프레임 크기
+    private int m_iVideoFrameWidth;
+    private int m_iVideoFrameHeight;
+
     void Start()
     {
-        Debug.Log("Start");
+        //Marker Detector를 준비합니다.
+        if(false == DllMainInit())
+        {
+            Debug.LogError("DllMainInit");
+        }
+
+        //비디오 프레임의 크기를 알아옵니다.
+        if(false == DllMainGetFrameSize(out m_iVideoFrameWidth, out m_iVideoFrameHeight))
+        {
+            Debug.LogError("DllMainGetFrameSize");
+        }
 
         InitTexture();
         canvasRenderer = gameObject.GetComponent<CanvasRenderer>();
 
-        MarkerDetectorInit();
-
-        threadMarkerDetector = new Thread(new ThreadStart(StartLoop));
+        threadMarkerDetector = new Thread(new ThreadStart(DllMainStartLoop));
         threadMarkerDetector.Start();
     }
 
@@ -58,13 +83,12 @@ public class DllTest : MonoBehaviour
 
     void OnDestroy()
     {
-        CloseLoop();
+        DllMainCloseLoop();
         
     }
 
     void OnApplicationQuit()
     {
-        Debug.Log("OnApplicationQuit");
         if (threadMarkerDetector != null && threadMarkerDetector.IsAlive)
         {
             //threadMarkerDetector.Join();
@@ -76,7 +100,7 @@ public class DllTest : MonoBehaviour
 
     void InitTexture()
     {
-        tex = new Texture2D(512, 512, TextureFormat.ARGB32, false);
+        tex = new Texture2D(m_iVideoFrameWidth, m_iVideoFrameHeight, TextureFormat.ARGB32, false);
         pixel32 = tex.GetPixels32();
         //Pin pixel32 array
         pixelHandle = GCHandle.Alloc(pixel32, GCHandleType.Pinned);
@@ -86,30 +110,28 @@ public class DllTest : MonoBehaviour
 
     void MatToTexture2D()
     {
-        IntPtr pMarkerTransform = IntPtr.Zero;
-        int itemCount = 0;
-
-
         //Convert Mat to Texture2D
-        GetRawImageBytes(pixelPtr, tex.width, tex.height, out pMarkerTransform, out itemCount);
+        DllMainGetRawImageBytes(pixelPtr, out IntPtr pMarkerTransform, out int itemCount);
 
         int structSize = Marshal.SizeOf(typeof(MarkerTransform));
 
         List<GameObject> listObject = GameObject.FindGameObjectsWithTag("Planets").ToList<GameObject>();
 
-        //Debug.Log(itemCount);
-        for (int i = 0; i < itemCount; i++)
+        for (int i = 0; i < itemCount; ++i)
         {
             MarkerTransform info = (MarkerTransform)Marshal.PtrToStructure(pMarkerTransform, typeof(MarkerTransform));
 
-            string strName = "" + info.marker_id;
-            Vector3 position = new Vector3(info.x / (Screen.width/8) - 2, -info.y / (Screen.height/4) + 2, 0);
-            Debug.Log("x : " + position.x + ",  y : " + position.y);
+            string strName = info.marker_id.ToString();
+
+            float iPositionX = (-1.0f + info.x / m_iVideoFrameWidth * 2) * Camera.main.aspect;
+            float iPositionY = 1.0f - info.y / m_iVideoFrameHeight * 2;
+
+            Vector3 position = new Vector3(iPositionX, iPositionY, 0);
+
             GameObject objGame = GameObject.Find(strName);
             
             if (objGame == null)
             {
-                Debug.Log(strName);
                 objGame = Instantiate(objPlanet, position, Quaternion.identity);
                 objGame.name = strName;
             }
@@ -135,9 +157,7 @@ public class DllTest : MonoBehaviour
 
 
         RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
-        UnityEngine.Vector2 vec2;
-        vec2.x = Screen.width;
-        vec2.y = Screen.height;
+        UnityEngine.Vector2 vec2 = new Vector2(Screen.width, Screen.height);
         rectTransform.sizeDelta = vec2;
 
         canvasRenderer.SetTexture(tex);
