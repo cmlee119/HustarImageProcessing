@@ -103,7 +103,8 @@ extern "C" __declspec(dllexport) bool DllMainInit()
     bClose = false;
     bFirst = true;
 
-    FileStorage fs("C:/Users/asper/source/repos/영상처리 및 OpenCV/offline/Marker Detect Mgr/Marker/output.txt", FileStorage::READ);
+    FileStorage fs("./output.txt", FileStorage::READ);
+    //FileStorage fs("D:/HustarImageProcessingProject.git/trunk/OpenCv Test/output.txt", FileStorage::READ);
     if (!fs.isOpened())
         return false;
 
