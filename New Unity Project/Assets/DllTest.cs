@@ -16,13 +16,13 @@ struct MarkerTransform
 
 public class DllTest : MonoBehaviour
 {
-    [DllImport("DllUnityTest 2", EntryPoint = "Init")]
+    [DllImport("DllUnityTest", EntryPoint = "Init")]
     private static extern void MarkerDetectorInit();
-    [DllImport("DllUnityTest 2", EntryPoint = "StartLoop")]
+    [DllImport("DllUnityTest", EntryPoint = "StartLoop")]
     private static extern void StartLoop();
-    [DllImport("DllUnityTest 2", EntryPoint = "CloseLoop")]
+    [DllImport("DllUnityTest", EntryPoint = "CloseLoop")]
     private static extern void CloseLoop();
-    [DllImport("DllUnityTest 2", EntryPoint = "GetRawImageBytes")]
+    [DllImport("DllUnityTest", EntryPoint = "GetRawImageBytes")]
     private static extern void GetRawImageBytes(IntPtr data, int width, int height, out IntPtr pVecMarkerTransform, out int itemCount);
 
     private CanvasRenderer canvasRenderer;
