@@ -58,6 +58,9 @@ public class DllTest : MonoBehaviour
     public bool m_bCamMode = true;
     public string m_strVideoFilePath = "";
 
+    private bool m_bSpaceMode = false;
+    public Texture2D m_textureSpace;
+
     void Start()
     {
         StringBuilder strBuilder = new StringBuilder(m_strVideoFilePath);
@@ -84,6 +87,15 @@ public class DllTest : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            m_bSpaceMode = true;
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            m_bSpaceMode = false;
+        }
+        
         MatToTexture2D(); 
     }
 
@@ -156,9 +168,22 @@ public class DllTest : MonoBehaviour
             obj.GetComponent<Renderer>().enabled = false;
         }
 
+        if(m_bSpaceMode == true)
+        {
+            if(m_textureSpace != null)
+            {
+                canvasRenderer.SetTexture(m_textureSpace);
+            }
+        }
+        else
+        {
+            tex.SetPixels32(pixel32);
+            tex.Apply();
+            canvasRenderer.SetTexture(tex);
+        }
+
         //Update the Texture2D with array updated in C++
-        tex.SetPixels32(pixel32);
-        tex.Apply();
+        
 
 
 
@@ -166,6 +191,6 @@ public class DllTest : MonoBehaviour
         UnityEngine.Vector2 vec2 = new Vector2(Screen.width, Screen.height);
         rectTransform.sizeDelta = vec2;
 
-        canvasRenderer.SetTexture(tex);
+        
     }
 }
